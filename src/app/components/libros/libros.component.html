@@ -1,0 +1,145 @@
+<div class="p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-book-fill text-success me-2"></i>Libros</h2>
+    <button class="btn btn-success" (click)="abrirNuevo()">
+      <i class="bi bi-plus-lg me-1"></i> Nuevo Libro
+    </button>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>#</th>
+              <th>Título</th>
+              <th>ISBN</th>
+              <th>Año</th>
+              <th>Género</th>
+              <th>Autor</th>
+              <th class="text-center">Stock</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (libros().length === 0) {
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                  No hay libros registrados
+                </td>
+              </tr>
+            }
+            @for (libro of libros(); track libro.id) {
+              <tr>
+                <td class="text-muted">{{ libro.id }}</td>
+                <td><strong>{{ libro.titulo }}</strong></td>
+                <td><code>{{ libro.isbn }}</code></td>
+                <td>{{ libro.anio }}</td>
+                <td><span class="badge bg-info text-dark">{{ libro.genero }}</span></td>
+                <td>
+                  <i class="bi bi-person me-1 text-muted"></i>{{ nombreAutor(libro.autorId) }}
+                </td>
+                <td class="text-center">
+                  <span class="badge" [class]="libro.disponible === 0 ? 'bg-danger' : libro.disponible < 3 ? 'bg-warning text-dark' : 'bg-success'">
+                    {{ libro.disponible }}/{{ libro.cantidad }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-outline-warning me-1" (click)="abrirEditar(libro)" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="eliminar(libro.id!)" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer text-muted small">
+      Total: {{ libros().length }} libro(s)
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalLibro" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title">
+          <i class="bi bi-book-fill me-2"></i>{{ editando ? 'Editar' : 'Nuevo' }} Libro
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Título <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="form.titulo" name="titulo" required
+              placeholder="Ej: Cien Años de Soledad">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">ISBN</label>
+            <input type="text" class="form-control" [(ngModel)]="form.isbn" name="isbn"
+              placeholder="Ej: 978-0-06-112008-4">
+          </div>
+          <div class="row">
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-semibold">Año <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" [(ngModel)]="form.anio" name="anio"
+                min="1000" max="2100">
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-semibold">Género <span class="text-danger">*</span></label>
+              <select class="form-select" [(ngModel)]="form.genero" name="genero" required>
+                <option value="">Seleccione...</option>
+                <option>Novela</option>
+                <option>Cuento</option>
+                <option>Poesía</option>
+                <option>Ensayo</option>
+                <option>Ciencia Ficción</option>
+                <option>Historia</option>
+                <option>Biografía</option>
+                <option>Otro</option>
+              </select>
+            </div>
+            <div class="col-md-4 mb-3">
+              <label class="form-label fw-semibold">Cantidad <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" [(ngModel)]="form.cantidad" name="cantidad"
+                min="1" required>
+              @if (editando) {
+                <div class="form-text">Disponibles: {{ form.disponible }}</div>
+              }
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Autor <span class="text-danger">*</span></label>
+            <select class="form-select" [(ngModel)]="form.autorId" name="autorId" required>
+              <option [ngValue]="0">Seleccione un autor...</option>
+              @for (autor of autores(); track autor.id) {
+                <option [ngValue]="autor.id">{{ autor.nombre }} {{ autor.apellido }}</option>
+              }
+            </select>
+            @if (autores().length === 0) {
+              <div class="form-text text-warning">
+                <i class="bi bi-exclamation-triangle me-1"></i>Primero registre autores.
+              </div>
+            }
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-success" (click)="guardar()"
+          [disabled]="!form.titulo || !form.genero || !form.autorId">
+          <i class="bi bi-floppy me-1"></i>{{ editando ? 'Actualizar' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
