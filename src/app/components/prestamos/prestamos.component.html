@@ -1,0 +1,150 @@
+<div class="p-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0"><i class="bi bi-arrow-left-right text-warning me-2"></i>Préstamos</h2>
+    <button class="btn btn-warning" (click)="abrirNuevo()">
+      <i class="bi bi-plus-lg me-1"></i> Nuevo Préstamo
+    </button>
+  </div>
+
+  @if (prestamosVencidos().length > 0) {
+    <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+      <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+      <span><strong>{{ prestamosVencidos().length }} préstamo(s) vencido(s)</strong> — la fecha de devolución ya pasó.</span>
+    </div>
+  }
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-dark">
+            <tr>
+              <th>#</th>
+              <th>Libro</th>
+              <th>Lector</th>
+              <th>Fecha Préstamo</th>
+              <th>Fecha Devolución</th>
+              <th>Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (prestamos().length === 0) {
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">
+                  <i class="bi bi-inbox fs-3 d-block mb-2"></i>
+                  No hay préstamos registrados
+                </td>
+              </tr>
+            }
+            @for (prestamo of prestamos(); track prestamo.id) {
+              <tr>
+                <td class="text-muted">{{ prestamo.id }}</td>
+                <td><i class="bi bi-book me-1 text-muted"></i>{{ tituloLibro(prestamo.libroId) }}</td>
+                <td><strong>{{ prestamo.nombreLector }}</strong></td>
+                <td>{{ prestamo.fechaPrestamo }}</td>
+                <td>{{ prestamo.fechaDevolucion || '—' }}</td>
+                <td>
+                  <span class="badge {{ estadoBadge(prestamo) }}">
+                    {{ estadoLabel(prestamo) }}
+                  </span>
+                </td>
+                <td class="text-center">
+                  <button class="btn btn-sm btn-outline-warning me-1" (click)="abrirEditar(prestamo)" title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger" (click)="eliminar(prestamo)" title="Eliminar">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card-footer text-muted small">
+      Total: {{ prestamos().length }} préstamo(s)
+    </div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="modalPrestamo" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="bi bi-arrow-left-right me-2"></i>{{ editando ? 'Editar' : 'Nuevo' }} Préstamo
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body">
+        @if (errorMsg) {
+          <div class="alert alert-danger py-2">
+            <i class="bi bi-exclamation-triangle me-1"></i>{{ errorMsg }}
+          </div>
+        }
+        <form>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Libro <span class="text-danger">*</span></label>
+            @if (!editando) {
+              <select class="form-select" [(ngModel)]="form.libroId" name="libroId" required>
+                <option [ngValue]="0">Seleccione un libro...</option>
+                @for (libro of librosDisponibles(); track libro.id) {
+                  <option [ngValue]="libro.id">
+                    {{ libro.titulo }} — {{ libro.disponible }}/{{ libro.cantidad }} disponibles
+                  </option>
+                }
+              </select>
+              @if (librosDisponibles().length === 0) {
+                <div class="form-text text-danger">
+                  <i class="bi bi-exclamation-circle me-1"></i>No hay libros con ejemplares disponibles.
+                </div>
+              }
+            } @else {
+              <input type="text" class="form-control" [value]="tituloLibro(form.libroId)" readonly>
+              <div class="form-text">
+                Disponibles actuales: <strong>{{ disponibleLibro(form.libroId) }}</strong>
+              </div>
+            }
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold">Nombre del Lector <span class="text-danger">*</span></label>
+            <input type="text" class="form-control" [(ngModel)]="form.nombreLector" name="nombreLector" required
+              placeholder="Ej: Juan Pérez">
+          </div>
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Fecha Préstamo <span class="text-danger">*</span></label>
+              <input type="text" datepicker class="form-control" [(ngModel)]="form.fechaPrestamo" name="fechaPrestamo" placeholder="YYYY-MM-DD" required>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label class="form-label fw-semibold">Fecha Devolución</label>
+              <input type="text" datepicker class="form-control" [(ngModel)]="form.fechaDevolucion" name="fechaDevolucion" placeholder="YYYY-MM-DD">
+            </div>
+          </div>
+          @if (editando) {
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Estado</label>
+              <select class="form-select" [(ngModel)]="form.estado" name="estado">
+                <option value="activo">Activo</option>
+                <option value="devuelto">Devuelto</option>
+              </select>
+              <div class="form-text">
+                Cambiar a "Devuelto" suma 1 ejemplar disponible al libro.
+              </div>
+            </div>
+          }
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-warning" (click)="guardar()"
+          [disabled]="!form.libroId || !form.nombreLector || !form.fechaPrestamo">
+          <i class="bi bi-floppy me-1"></i>{{ editando ? 'Actualizar' : 'Guardar' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
