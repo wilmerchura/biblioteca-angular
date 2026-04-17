@@ -1,0 +1,264 @@
+<div class="p-4" id="print-area">
+
+  <div class="print-header">
+    <div class="d-flex align-items-center gap-3 mb-1">
+      <i class="bi bi-building-fill fs-3 text-primary"></i>
+      <div>
+        <h3 class="fw-bold mb-0">Sistema de Biblioteca</h3>
+        <p class="text-muted mb-0" style="font-size:0.85rem">Reporte — {{ tabLabel() }}</p>
+      </div>
+    </div>
+    <hr>
+    <div class="d-flex justify-content-between text-muted" style="font-size:0.8rem">
+      <span>Generado: {{ fechaImpresion }}</span>
+      <span>Sistema de Biblioteca &copy; 2026</span>
+    </div>
+  </div>
+
+  <div class="mb-4 d-flex justify-content-between align-items-start no-print">
+    <div>
+      <h4 class="fw-bold text-dark mb-1">Reportes</h4>
+      <p class="text-muted mb-0" style="font-size:0.9rem">Estadísticas y análisis del sistema</p>
+    </div>
+    <button class="btn btn-outline-dark" (click)="imprimir()">
+      <i class="bi bi-printer me-2"></i>Imprimir
+    </button>
+  </div>
+
+
+  @if (tabActivo() === 'stats') {
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-2">
+        <div class="card text-center py-3" style="border-top: 3px solid #3b82f6 !important">
+          <div class="fw-bold fs-2 text-primary">{{ stats().autores }}</div>
+          <div class="text-muted" style="font-size:0.78rem">Autores</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card text-center py-3" style="border-top: 3px solid #10b981 !important">
+          <div class="fw-bold fs-2 text-success">{{ stats().libros }}</div>
+          <div class="text-muted" style="font-size:0.78rem">Libros</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card text-center py-3" style="border-top: 3px solid #8b5cf6 !important">
+          <div class="fw-bold fs-2" style="color:#8b5cf6">{{ stats().prestamos }}</div>
+          <div class="text-muted" style="font-size:0.78rem">Préstamos</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card text-center py-3" style="border-top: 3px solid #f59e0b !important">
+          <div class="fw-bold fs-2 text-warning">{{ stats().activos }}</div>
+          <div class="text-muted" style="font-size:0.78rem">Activos</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card text-center py-3" style="border-top: 3px solid #10b981 !important">
+          <div class="fw-bold fs-2 text-success">{{ stats().devueltos }}</div>
+          <div class="text-muted" style="font-size:0.78rem">Devueltos</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card text-center py-3" style="border-top: 3px solid #ef4444 !important">
+          <div class="fw-bold fs-2 text-danger">{{ stats().vencidos }}</div>
+          <div class="text-muted" style="font-size:0.78rem">Vencidos</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-2">
+        <div class="card text-center py-3" style="border-top: 3px solid #64748b !important">
+          <div class="fw-bold fs-2 text-secondary">{{ stats().sinStock }}</div>
+          <div class="text-muted" style="font-size:0.78rem">Sin Stock</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3 mb-3">
+      <div class="col-md-4">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="fw-bold mb-3">Estado de Préstamos</h6>
+            <canvas #chartEstados style="max-height:240px"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="fw-bold mb-3">Libros por Género</h6>
+            <canvas #chartGeneros style="max-height:240px"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="fw-bold mb-3">Top 5 Libros más Prestados</h6>
+            <canvas #chartLibrosPrestados style="max-height:220px"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card h-100">
+          <div class="card-body">
+            <h6 class="fw-bold mb-3">Autores con más Libros</h6>
+            @if (topAutores().length === 0) {
+              <p class="text-muted text-center py-4">Sin datos</p>
+            } @else {
+              @for (item of topAutores(); track item.nombre) {
+                <div class="d-flex align-items-center gap-2 mb-2">
+                  <div class="text-truncate" style="min-width:0;flex:1;font-size:0.88rem">{{ item.nombre }}</div>
+                  <div class="progress flex-grow-1" style="height:10px;border-radius:20px">
+                    <div class="progress-bar" role="progressbar"
+                      [style.width.%]="(item.total / (topAutores()[0]?.total || 1)) * 100"
+                      style="background:#3b82f6;border-radius:20px"></div>
+                  </div>
+                  <span class="badge bg-primary-subtle text-primary border border-primary-subtle" style="font-size:0.78rem">{{ item.total }}</span>
+                </div>
+              }
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  @if (tabActivo() === 'autores') {
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>#</th>
+                <th>Nombre</th>
+                <th>Apellido</th>
+                <th>Nacionalidad</th>
+                <th>Fecha Nac.</th>
+                <th class="text-center">Libros</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (autores().length === 0) {
+                <tr><td colspan="6" class="text-center text-muted py-4">Sin registros</td></tr>
+              }
+              @for (autor of autores(); track autor.id) {
+                <tr>
+                  <td class="text-muted">{{ autor.id }}</td>
+                  <td>{{ autor.nombre }}</td>
+                  <td><strong>{{ autor.apellido }}</strong></td>
+                  <td><span class="badge bg-secondary">{{ autor.nacionalidad }}</span></td>
+                  <td>{{ autor.fechaNacimiento || '—' }}</td>
+                  <td class="text-center">
+                    <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                      {{ librosDeAutor(autor.id!) }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer">Total: {{ autores().length }} autor(es)</div>
+    </div>
+  }
+
+  @if (tabActivo() === 'libros') {
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>#</th>
+                <th>Título</th>
+                <th>ISBN</th>
+                <th>Año</th>
+                <th>Género</th>
+                <th>Autor</th>
+                <th class="text-center">Total</th>
+                <th class="text-center">Disponible</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (libros().length === 0) {
+                <tr><td colspan="8" class="text-center text-muted py-4">Sin registros</td></tr>
+              }
+              @for (libro of libros(); track libro.id) {
+                <tr>
+                  <td class="text-muted">{{ libro.id }}</td>
+                  <td><strong>{{ libro.titulo }}</strong></td>
+                  <td><code>{{ libro.isbn || '—' }}</code></td>
+                  <td>{{ libro.anio }}</td>
+                  <td><span class="badge bg-info text-dark">{{ libro.genero }}</span></td>
+                  <td>{{ nombreAutor(libro.autorId) }}</td>
+                  <td class="text-center">{{ libro.cantidad }}</td>
+                  <td class="text-center">
+                    <span class="badge" [class]="libro.disponible === 0 ? 'bg-danger' : libro.disponible < 3 ? 'bg-warning text-dark' : 'bg-success'">
+                      {{ libro.disponible }}
+                    </span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer">Total: {{ libros().length }} libro(s)</div>
+    </div>
+  }
+
+  @if (tabActivo() === 'prestamos') {
+    @if (stats().vencidos > 0) {
+      <div class="alert alert-danger d-flex align-items-center gap-2 mb-3">
+        <i class="bi bi-exclamation-triangle-fill fs-5"></i>
+        <span><strong>{{ stats().vencidos }} préstamo(s) vencido(s)</strong> — la fecha de devolución ya pasó y siguen activos.</span>
+      </div>
+    }
+    <div class="card">
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead class="table-dark">
+              <tr>
+                <th>#</th>
+                <th>Libro</th>
+                <th>Lector</th>
+                <th>Fecha Préstamo</th>
+                <th>Fecha Devolución</th>
+                <th class="text-center">Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              @if (prestamos().length === 0) {
+                <tr><td colspan="6" class="text-center text-muted py-4">Sin registros</td></tr>
+              }
+              @for (p of prestamos(); track p.id) {
+                <tr [class.table-danger]="esVencido(p)">
+                  <td class="text-muted">{{ p.id }}</td>
+                  <td>{{ nombreLibro(p.libroId) }}</td>
+                  <td><strong>{{ p.nombreLector }}</strong></td>
+                  <td>{{ p.fechaPrestamo }}</td>
+                  <td>
+                    {{ p.fechaDevolucion || '—' }}
+                    @if (esVencido(p)) {
+                      <i class="bi bi-exclamation-circle-fill text-danger ms-1" title="Fecha vencida"></i>
+                    }
+                  </td>
+                  <td class="text-center">
+                    <span class="badge {{ estadoBadge(p) }}">{{ estadoLabel(p) }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card-footer">Total: {{ prestamos().length }} préstamo(s) · Vencidos: {{ stats().vencidos }}</div>
+    </div>
+  }
+
+</div>
