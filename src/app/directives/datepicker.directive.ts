@@ -28,8 +28,48 @@ export class DatepickerDirective implements OnInit, OnDestroy, ControlValueAcces
       onChange: (_: Date[], dateStr: string) => {
         this.onChange(dateStr);
         this.onTouched();
+      },
+      onReady: (_: any, __: any, fp: any) => {
+        this.injectYearSelect(fp);
+      },
+      onMonthChange: (_: any, __: any, fp: any) => {
+        this.syncYearSelect(fp);
       }
     });
+  }
+
+  private injectYearSelect(fp: any) {
+    const monthContainer = fp.calendarContainer?.querySelector('.flatpickr-current-month') as HTMLElement;
+    if (!monthContainer || monthContainer.querySelector('.fp-year-select')) return;
+
+    const numWrapper = monthContainer.querySelector('.numInputWrapper') as HTMLElement;
+    const currentYear = fp.currentYear;
+
+    const select = document.createElement('select');
+    select.className = 'fp-year-select';
+
+    for (let y = currentYear + 10; y >= currentYear - 100; y--) {
+      const opt = document.createElement('option');
+      opt.value = String(y);
+      opt.textContent = String(y);
+      if (y === currentYear) opt.selected = true;
+      select.appendChild(opt);
+    }
+
+    select.addEventListener('change', () => {
+      fp.changeYear(Number(select.value));
+    });
+
+    if (numWrapper) {
+      numWrapper.after(select);
+    } else {
+      monthContainer.appendChild(select);
+    }
+  }
+
+  private syncYearSelect(fp: any) {
+    const select = fp.calendarContainer?.querySelector('.fp-year-select') as HTMLSelectElement;
+    if (select) select.value = String(fp.currentYear);
   }
 
   writeValue(value: string): void {
